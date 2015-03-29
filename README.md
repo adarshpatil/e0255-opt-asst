@@ -1,3 +1,13 @@
+E0255 Assignment
+
+Deadline: Apr 26, 2015 11:59pm
+
+Put your function in a separate file harris.opt.cpp and name it 
+harris_opt.  With the video demo, hitting the key 'o' should switch from 
+the base implementation provided in harris.cpp (harris_base) to yours 
+(harris_opt).  You'll have to update video_benchmark.py slightly to 
+allow this.
+
 Compiling the reference implementation
 --------------------------------------
 Install OpenCV with QT or gtk
@@ -38,4 +48,6 @@ Once the video is running
  
 h - toggles harris mode on/off
 
-space - toggles between reference and opencv implementation
+space - toggles between opencv and base or optimized implementation
+
+o - toggles between base and optimized implementations

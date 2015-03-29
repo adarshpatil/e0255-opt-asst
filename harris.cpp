@@ -6,7 +6,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 
-void harris_ref(int C, int R, float * input, float *& harris);
+void harris_base(int C, int R, float * input, float *& harris);
 
 using namespace cv;
 
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
         if (harris != NULL)
             free(harris);
 	TIMER__	
-        harris_ref(M, N, img_ref, harris);      
+        harris_base(M, N, img_ref, harris);      
 	__TIMER("Reference")
     }
    
@@ -150,7 +150,7 @@ int main(int argc, char** argv)
 }
 
 /* Your Implementation */
-void  harris_ref(int  C, int  R, float * img, float *& harris)
+void  harris_base(int  C, int  R, float * img, float *& harris)
 {
   float * Ix;
   Ix = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));

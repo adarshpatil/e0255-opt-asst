@@ -5,7 +5,7 @@
 #include <string.h>
 
 
-extern "C" void  harris_ref(int  C, int  R, float * img, void * harris_void)
+extern "C" void  harris_base(int  C, int  R, float * img, void * harris_void)
 {
   float * Ix;
   Ix = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));

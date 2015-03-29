@@ -12,7 +12,7 @@ def draw_str(dst, (x, y), s):
 
 # load reference implementation as a shared library
 libharris = ctypes.cdll.LoadLibrary("./harris.so")
-harris = libharris.harris_ref
+harris = libharris.harris_base
 
 # Load the input video file  
 fn = sys.argv[1]
