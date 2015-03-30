@@ -2,6 +2,10 @@ E0255 Assignment
 
 Deadline: Apr 26, 2015 11:59pm
 
+To objective of the assignment is to optimize the Harris corner 
+detection algorithm using transformations learnt during the course, in 
+particular, locality optimizations, vectorization, and parallelization.
+
 Put your function in a separate file harris.opt.cpp and name it 
 harris_opt.  With the video demo, hitting the key 'o' should switch from 
 the base implementation provided in harris.cpp (harris_base) to yours 
