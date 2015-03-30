@@ -2,7 +2,7 @@ E0255 Assignment
 
 Deadline: Apr 26, 2015 11:59pm
 
-To objective of the assignment is to optimize the Harris corner 
+The objective of the assignment is to optimize the Harris corner 
 detection algorithm using transformations learnt during the course, in 
 particular, locality optimizations, vectorization, and parallelization.
 
@@ -11,6 +11,31 @@ harris_opt.  With the video demo, hitting the key 'o' should switch from
 the base implementation provided in harris.cpp (harris_base) to yours 
 (harris_opt).  You'll have to update video_benchmark.py slightly to 
 allow this.
+
+All performance measurements should be taken on CL1 workstations. The 
+configuration of the workstations is 
+
+HP Z230 Tower Workstation
+Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz - (Haswell microarchitecture)
+4 physical cores  (x 2 hyperthreads / core)
+64 KB L1 private / 256 KB L2 private / 8 MB L3 shared cache
+32 GB DDR3-1600 memory
+2 x 1 TB storage in RAID 1
+128GB SSD storage (for root file system)
+NVIDIA Quadro K620 (384 cores, 2GB GDDR3 RAM, PCI-express card) 
+
+
+WHAT TO SUBMIT
+---------------
+Submit (1) your harris.opt.cpp with the modified function named as 
+described above, and with the same signature as harris_base, (2) the 
+modified video_benchmark.py, and (3) a file named 'report.txt' with a 
+description of the optimizations you performed, an explanation of why 
+you performed those optimizations, and the performance you measured 
+while running on 1, 2, 3, and 4 cores (with no hyperthreads in any case) 
+on a CL1 workstation. All three files should be sent in a single tar 
+gzipped file named <your name>.tar.gz. 
+
 
 Compiling the reference implementation
 --------------------------------------
