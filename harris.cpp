@@ -5,6 +5,7 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
+#include "harris.opt.cpp"
 
 void harris_base(int C, int R, float * input, float *& harris);
 
@@ -49,6 +50,8 @@ int main(int argc, char** argv)
     const char* window_image  = "Image";
     const char* window_opencv_result  = "OpenCV Result";
     const char* window_ref_result  = "Reference Result";
+    const char* window_opt_result = "Optimized Result";
+    const char* window_diff = "absdiff ref opt";
 
     if(argc == 2){
         img = imread(argv[1]);
@@ -92,7 +95,7 @@ int main(int argc, char** argv)
     Mat sumKern = (Mat_<float>(3,3) <<    1.0f, 1.0f, 1.0f,
                                           1.0f, 1.0f, 1.0f,
                                           1.0f, 1.0f, 1.0f);
-
+	
     for (int i = 0; i < NRUNS; i++) {
 	TIMER__	
         cornerHarris(img_region, opencv_harris, 3, 3, 0.04);
@@ -110,7 +113,7 @@ int main(int argc, char** argv)
             int ii = i - 1 > 0 ?  (i -1 < N ? i-1:  N-1): 0;
             int jj = j - 1 > 0 ?  (j -1 < M ? j-1:  M-1): 0;
             img_ref[(i)*(M+2) + (j)] = img_region.at<float>(ii, jj);
-    }
+		}
 
     for (int i = 0; i < NRUNS; i++) {
         if (harris != NULL)
@@ -125,22 +128,48 @@ int main(int argc, char** argv)
         for (int j = 0; j < M-2; j++){
             result_ref.at<float>(i, j) = harris[(i+2)*(M+2) + (j+2)];
         }
-    }  
+    }
+    
+    /* Optimized Implementation */
+	for (int i = 0; i < NRUNS; i++) {
+        if (harris != NULL)
+            free(harris);
+	TIMER__	
+        harris_opt(M, N, img_ref, harris);      
+	__TIMER("Optimized")
+    }
+   
+    Mat result_opt(N-2, M-2, img_region.type());
+    for (int i = 0; i < N-2; i++) {
+        for (int j = 0; j < M-2; j++){
+            result_opt.at<float>(i, j) = harris[(i+2)*(M+2) + (j+2)];
+        }
+    }
+      
 
 	#ifdef SHOW
+	Mat diffCVOpt(N-2, M-2, img_region.type());
+	Mat diffOptCV(N-2, M-2, img_region.type());
     // Create windows
-    namedWindow( window_image, WINDOW_NORMAL );
+    //namedWindow( window_image, WINDOW_NORMAL );
     namedWindow( window_opencv_result, WINDOW_NORMAL );
     namedWindow( window_ref_result, WINDOW_NORMAL );
+    namedWindow( window_opt_result, WINDOW_NORMAL );
+    namedWindow( window_diff, WINDOW_NORMAL );
     for(;;) {
         int c;
         c = waitKey(10);
         if( (char)c == 27 )
         { break; }
-        imshow( window_image, img_show);
+        // imshow( window_image, img_show);
         // The scaling factor is to display the coarsity map
         imshow( window_opencv_result, opencv_harris * 10000);
         imshow( window_ref_result, result_ref * 10000);
+        imshow( window_opt_result, result_opt * 10000);
+        
+		absdiff(result_opt, result_ref, diffCVOpt);
+		imshow( window_diff, diffCVOpt * 10000);
+		
     }
 	#endif
 
@@ -241,7 +270,7 @@ void  harris_base(int  C, int  R, float * img, float *& harris)
 
   for (int  i = 2; (i < R); i = (i + 1)) {
     for (int  j = 2; (j < C); j = (j + 1)) {
-
+ 
       float trace = 
           Sxx[((i * (2 + C)) + j)] + Syy[((i * (2 + C)) + j)];
 
