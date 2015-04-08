@@ -23,6 +23,7 @@ show = int(sys.argv[2])
 frames = 0
 cv_mode = True
 harris_mode = False
+harris_opt = False
 
 while(cap.isOpened()):
     # Read one frame
@@ -43,12 +44,23 @@ while(cap.isOpened()):
             # map computed by OpenCV should match yours.
             res = cv2.cornerHarris(gray, 3, 3, 0.04)
         else:    
-            res = np.zeros((rows, cols), np.float32)
-            # The number of cols and rows is reduced since the 
-            # routine only computes the corner map for the
-            # window (2, 2) -- (cols-2, rows-2)
-            harris(ctypes.c_int(cols-2), ctypes.c_int(rows-2), \
-            ctypes.c_void_p(gray.ctypes.data), ctypes.c_void_p(res.ctypes.data))
+			if harris_opt:
+				# TODO: HARRIS_OPT HERE
+				res = np.zeros((rows, cols), np.float32)
+				# The number of cols and rows is reduced since the 
+				# routine only computes the corner map for the
+				# window (2, 2) -- (cols-2, rows-2)
+				harris(ctypes.c_int(cols-2), ctypes.c_int(rows-2), \
+				ctypes.c_void_p(gray.ctypes.data), ctypes.c_void_p(res.ctypes.data))\
+				
+			else:
+				res = np.zeros((rows, cols), np.float32)
+				# The number of cols and rows is reduced since the 
+				# routine only computes the corner map for the
+				# window (2, 2) -- (cols-2, rows-2)
+				harris(ctypes.c_int(cols-2), ctypes.c_int(rows-2), \
+				ctypes.c_void_p(gray.ctypes.data), ctypes.c_void_p(res.ctypes.data))
+				
         res = cv2.cvtColor(res, cv2.COLOR_GRAY2RGB)     
     else:
         res = frame
@@ -60,7 +72,10 @@ while(cap.isOpened()):
     if cv_mode and harris_mode:
         draw_str(res, (40, 80), "Pipeline     :  " + str("OpenCV"))
     elif harris_mode:
-        draw_str(res, (40, 80), "Pipeline     :  " + str("Reference"))
+		if harris_opt:
+			draw_str(res, (40, 80), "Pipeline     :  " + str("Optimized"))
+		else:
+			draw_str(res, (40, 80), "Pipeline     :  " + str("Reference"))	
     if harris_mode:    
         draw_str(res, (40, 120), "Benchmark   :  " + str("Harris Corner"))
     cv2.imshow('Video', res)
@@ -84,6 +99,8 @@ while(cap.isOpened()):
         cv_mode = not cv_mode
     if ch == ord('h'):
         harris_mode = not harris_mode
+    if ch == ord('o'):
+		harris_opt = not harris_opt
     frames += 1
 
 cap.release()
