@@ -11,47 +11,36 @@
 
 void  harris_opt(int  C, int  R, float * img, float *& harris)
 {
-  float * Ix;
-  Ix = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
-  
-  float *dummy1;
-  dummy1 = (float *) (malloc((sizeof(float ) * (PAD))));
-  
-  float * Iy;
-  Iy = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
-  
-  float *dummy2;
-  dummy2 = (float *) (malloc((sizeof(float ) * (PAD))));
   
   float * Ixx;
   Ixx = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
   
   float *dummy3;
-  dummy3 = (float *) (malloc((sizeof(float ) * (PAD))));
+  dummy3 = (float *) (malloc(PAD));
   
   float * Ixy;
   Ixy = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
   
   float *dummy4;
-  dummy4 = (float *) (malloc((sizeof(float ) * (PAD))));
+  dummy4 = (float *) (malloc(PAD));
   
   float * Iyy;
   Iyy = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
   
   float *dummy5;
-  dummy5 = (float *) (malloc((sizeof(float ) * (PAD))));
+  dummy5 = (float *) (malloc(PAD));
   
   float * Sxx;
   Sxx = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
   
   float *dummy6;
-  dummy6 = (float *) (malloc((sizeof(float ) * (PAD))));
+  dummy6 = (float *) (malloc(PAD));
   
   float * Sxy;
   Sxy = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
   
   float *dummy7;
-  dummy7 = (float *) (malloc((sizeof(float ) * (PAD))));
+  dummy7 = (float *) (malloc(PAD));
   
   float * Syy;
   Syy = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
@@ -110,34 +99,28 @@ void  harris_opt(int  C, int  R, float * img, float *& harris)
   {
     for (int  j = 1; (j <= C); j = (j + 1))
     {
+	  float resx,resy;
       // X derivative
-      Ix[((i * (2 + C)) + j)] = (img[(((-1 + i) * (C + 2)) + (-1 + j))] * -0.0833333333333f) + 
+      resx = (img[(((-1 + i) * (C + 2)) + (-1 + j))] * -0.0833333333333f) + 
                                 (img[(((1 + i) * (C + 2)) + (-1 + j))] * 0.0833333333333f) + 
                                 (img[(((-1 + i) * (C + 2)) + j)] * -0.166666666667f) + 
                                 (img[(((1 + i) * (C + 2)) + j)] * 0.166666666667f) + 
                                 (img[(((-1 + i) * (C + 2)) + (1 + j))] * -0.0833333333333f) + 
                                 (img[(((1 + i) * (C + 2)) + (1 + j))] * 0.0833333333333f);
+      
+      
       // Y derivative
-      Iy[((i * (2 + C)) + j)] = (img[(((-1 + i) * (C + 2)) + (-1 + j))] * -0.0833333333333f) + 
+      resy = (img[(((-1 + i) * (C + 2)) + (-1 + j))] * -0.0833333333333f) + 
                                 (img[(((-1 + i) * (C + 2)) + (1 + j))] * 0.0833333333333f) + 
                                 (img[((i * (C + 2)) + (-1 + j))] * -0.166666666667f) + 
                                 (img[((i * (C + 2)) + (1 + j))] * 0.166666666667f) + 
                                 (img[(((1 + i) * (C + 2)) + (-1 + j))] * -0.0833333333333f) + 
                                 (img[(((1 + i) * (C + 2)) + (1 + j))] * 0.0833333333333f);
-    }
-  }
-  
-  #pragma ivdep
-  #pragma omp parallel for
-  for (int  i = 1; (i <= R); i++) {
-    for (int  j = 1; (j <= C); j++) {
-
-      Ixx[((i * (2 + C)) + j)] = 
-          Ix[((i * (2 + C)) + j)] * Ix[((i * (2 + C)) + j)];
-      Iyy[((i * (2 + C)) + j)] = 
-          Iy[((i * (2 + C)) + j)] * Iy[((i * (2 + C)) + j)];
-      Ixy[((i * (2 + C)) + j)] = 
-          Ix[((i * (2 + C)) + j)] * Iy[((i * (2 + C)) + j)];
+                                
+      Ixx[((i * (2 + C)) + j)] = resx * resx;
+      Iyy[((i * (2 + C)) + j)] = resy * resy;
+      Ixy[((i * (2 + C)) + j)] = resx * resy;
+      
     }
   }
   
@@ -223,14 +206,13 @@ void  harris_opt(int  C, int  R, float * img, float *& harris)
   }
   
   
-  free(Ix);
-  free(Iy);
+
   free(Ixx);
   free(Ixy);
   free(Iyy);
   free(Sxx);
   free(Sxy);
   free(Syy);
-  free(dummy1); free(dummy2); free(dummy3); free(dummy4); free(dummy5);
+  free(dummy3); free(dummy4); free(dummy5);
   free(dummy6); free(dummy7);
 }
