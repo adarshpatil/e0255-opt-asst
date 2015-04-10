@@ -14,6 +14,10 @@ def draw_str(dst, (x, y), s):
 libharris = ctypes.cdll.LoadLibrary("./harris.so")
 harris = libharris.harris_base
 
+# load optimized implementation as shared library
+libharrisopt = ctypes.cdll.LoadLibrary("./harrisopt.so")
+harrisopt = libharrisopt.harris_opt
+
 # Load the input video file  
 fn = sys.argv[1]
 cap = cv2.VideoCapture(fn)
@@ -50,7 +54,7 @@ while(cap.isOpened()):
 				# The number of cols and rows is reduced since the 
 				# routine only computes the corner map for the
 				# window (2, 2) -- (cols-2, rows-2)
-				harris(ctypes.c_int(cols-2), ctypes.c_int(rows-2), \
+				harrisopt(ctypes.c_int(cols-2), ctypes.c_int(rows-2), \
 				ctypes.c_void_p(gray.ctypes.data), ctypes.c_void_p(res.ctypes.data))\
 				
 			else:
@@ -93,14 +97,31 @@ while(cap.isOpened()):
         print "frame interval :  %.1f ms" % (frameEnd*1000 - frameStart*1000)
 
     ch = 0xFF & cv2.waitKey(1)
+    
     if ch == ord('q'):
-        break
+		print "exiting"
+		break
+        
     if ch == ord(' '):
-        cv_mode = not cv_mode
+		cv_mode = not cv_mode
+		if cv_mode:
+			print "harris openCV on"
+		else:
+			print "harris openCV off"
+        
     if ch == ord('h'):
-        harris_mode = not harris_mode
+		harris_mode = not harris_mode
+		if harris_mode:
+			print "harris mode on"
+		else:
+			print "harris mode off"
+			
     if ch == ord('o'):
 		harris_opt = not harris_opt
+		if harris_opt:
+			print "toggle to harris optimized"
+		else:
+			print "toggle to harris reference"
     frames += 1
 
 cap.release()
