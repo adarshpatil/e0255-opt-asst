@@ -6,7 +6,7 @@
 #include <algorithm>
 
 #ifndef PAD
-#define PAD 1051
+#define PAD 4096
 #endif
 
 void  harris_opt(int  C, int  R, float * img, float *& harris)
