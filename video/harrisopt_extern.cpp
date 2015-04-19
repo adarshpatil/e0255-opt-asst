@@ -5,148 +5,152 @@
 #include <string.h>
 #include <omp.h>
 
-#ifndef PAD
-#define PAD 1051
+#ifndef BLOCK
+#define BLOCK 16
 #endif
 
 extern "C" void  harris_opt(int  C, int  R, float * img, void * harris_void)
 {
-  
-  float * Ixx;
-  Ixx = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
-  
-  float *dummy3;
-  dummy3 = (float *) (malloc((sizeof(float ) * (PAD))));
-  
-  float * Ixy;
-  Ixy = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
-  
-  float *dummy4;
-  dummy4 = (float *) (malloc((sizeof(float ) * (PAD))));
-  
-  float * Iyy;
-  Iyy = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
-  
-  float *dummy5;
-  dummy5 = (float *) (malloc((sizeof(float ) * (PAD))));
-  
-  float * Sxx;
-  Sxx = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
-  
-  float *dummy6;
-  dummy6 = (float *) (malloc((sizeof(float ) * (PAD))));
-  
-  float * Sxy;
-  Sxy = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
-  
-  float *dummy7;
-  dummy7 = (float *) (malloc((sizeof(float ) * (PAD))));
-  
-  float * Syy;
-  Syy = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
+
+	float *dummy, *dummy1, *dummy2, *dummy3, *dummy4, *dummy5;
+	float *Ixx, *Ixy, *Iyy, *Sxx, *Sxy, *Syy;
 
   float *harris = (float *)harris_void;
-
-  #pragma ivdep
-  #pragma omp parallel for
-  for (int  i = 1; (i <= R); i = (i + 1))
+  
+  #pragma omp parllel for
+  for (int  ii = 0; ii < R; ii = (ii + BLOCK))
   {
-    for (int  j = 1; (j <= C); j = (j + 1))
-    {
-	  float resx,resy;
-      // X derivative
-      resx = (img[(((-1 + i) * (C + 2)) + (-1 + j))] * -0.0833333333333f) + 
-                                (img[(((1 + i) * (C + 2)) + (-1 + j))] * 0.0833333333333f) + 
-                                (img[(((-1 + i) * (C + 2)) + j)] * -0.166666666667f) + 
-                                (img[(((1 + i) * (C + 2)) + j)] * 0.166666666667f) + 
-                                (img[(((-1 + i) * (C + 2)) + (1 + j))] * -0.0833333333333f) + 
-                                (img[(((1 + i) * (C + 2)) + (1 + j))] * 0.0833333333333f);
-      
-      
-      // Y derivative
-      resy = (img[(((-1 + i) * (C + 2)) + (-1 + j))] * -0.0833333333333f) + 
-                                (img[(((-1 + i) * (C + 2)) + (1 + j))] * 0.0833333333333f) + 
-                                (img[((i * (C + 2)) + (-1 + j))] * -0.166666666667f) + 
-                                (img[((i * (C + 2)) + (1 + j))] * 0.166666666667f) + 
-                                (img[(((1 + i) * (C + 2)) + (-1 + j))] * -0.0833333333333f) + 
-                                (img[(((1 + i) * (C + 2)) + (1 + j))] * 0.0833333333333f);
+		Ixx = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
+	  Ixy = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
+	  Iyy = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
+	  Sxx = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
+  	Sxy = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
+	  Syy = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
+    
+		for (int  jj = 0; jj < C; jj = (jj + BLOCK))
+		{
+			int iblock = (R<ii+BLOCK)?(R-ii):BLOCK;
+			int jblock = (C<jj+BLOCK)?(C-jj):BLOCK;
+	  	
+			for (int  i = 1; (i <= iblock); i = (i + 1))
+			{
+				for (int  j = 1; (j <= jblock); j = (j + 1))
+				{
+					float resx,resy;
+					int index1 = (((-1 + (ii+i)) * (C + 2)) + (-1 + (jj+j)));		// [i-1] [j-1]
+					int index2 = (((1 + (ii+i)) * (C + 2)) + (-1 + (jj+j))); 		// [i+1] [j-1]
+					int index3 = (((-1 + (ii+i)) * (C + 2)) + (jj+j));			// [i-1] [j]
+					int index4 = (((1 + (ii+i)) * (C + 2)) + (jj+j));				// [i+1] [j]
+					int index5 = (((-1 + (ii+i)) * (C + 2)) + (1 + (jj+j))); 		// [i-1] [j+1]
+					int index6 = (((1 + (ii+i)) * (C + 2)) + (1 + (jj+j)));		// [i+1] [j+1]
+					int index7 = (((ii+i) * (C + 2)) + (-1 + (jj+j)));			// [i] [j-1]
+					int index8 = (((ii+i) * (C + 2)) + (1 + (jj+j)));				// [i] [j+1]
+					
+					// X derivative
+					resx = (img[index1] * -0.0833333333333f) + 
+										(img[index2] * 0.0833333333333f) + 
+										(img[index3] * -0.166666666667f) + 
+										(img[index4] * 0.166666666667f) + 
+										(img[index5] * -0.0833333333333f) + 
+										(img[index6] * 0.0833333333333f);
                                 
-      Ixx[((i * (2 + C)) + j)] = resx * resx;
-      Iyy[((i * (2 + C)) + j)] = resy * resy;
-      Ixy[((i * (2 + C)) + j)] = resx * resy;
-      
-    }
-  }
-  
-  #pragma omp parallel for
-  for (int  i = 2; (i < R); i = (i + 1)) {
-    for (int  j = 2; (j < C); j = (j + 1)) {
+					// Y derivative
+					resy = (img[index1] * -0.0833333333333f) + 
+										(img[index5] * 0.0833333333333f) + 
+										(img[index7] * -0.166666666667f) + 
+										(img[index8] * 0.166666666667f) + 
+										(img[index2] * -0.0833333333333f) + 
+										(img[index6] * 0.0833333333333f);
+										
+					Ixx[((i * (2 + BLOCK)) + j)] = resx * resx;
+					Iyy[((i * (2 + BLOCK)) + j)] = resy * resy;
+					Ixy[((i * (2 + BLOCK)) + j)] = resx * resy;
+ 				}
+			}
+	  	
+			for (int  i = 2; (i < iblock); i=i+1) {
+				for (int  j = 2; (j < jblock); j=j+1) {
+				
+					int index1, index2, index3;
+					index1 = (((-1 + i) * (2 + BLOCK)) + j);			// [i-1] [j]
+					index2 = ((i * (2 + BLOCK)) + j);					// [i] [j]
+					index3 = (((1 + i) * (2 + BLOCK)) + j);			// [i+1] [j]
+	  
+					Syy[index2] = Iyy[ index1-1 ] + 
+                                 Iyy[ index1 ] + 
+                                 Iyy[ index1+1 ] + 
+                                 Iyy[ index2-1 ] + 
+                                 Iyy[ index2 ] + 
+                                 Iyy[ index2+1 ] + 
+                                 Iyy[ index3-1 ] + 
+                                 Iyy[ index3 ] + 
+                                 Iyy[ index3+1 ];
+				} 
+			}
+ 
+			for (int  i = 2; (i < iblock); i=i+1) {
+				for (int  j = 2; (j < jblock); j=j+1){
+				
+					int index1, index2, index3;
+					index1 = (((-1 + i) * (2 + BLOCK)) + j);			// [i-1] [j]
+					index2 = ((i * (2 + BLOCK)) + j);					// [i] [j]
+					index3 = (((1 + i) * (2 + BLOCK)) + j);			// [i+1] [j]
+	  	
+      		Sxy[index2] = Ixy[ index1-1 ] + 
+                                 Ixy[ index1 ] +
+                                 Ixy[ index1+1 ] + 
+                                 Ixy[ index2-1 ] + 
+                                 Ixy[ index2] + 
+                                 Ixy[ index2+1 ] + 
+                                 Ixy[ index3-1 ] + 
+                                 Ixy[ index3 ] + 
+                                 Ixy[ index3+1 ];
+				} 
+			}
+			
+			for (int  i = 2; (i < iblock); i=i+1) {
+    		for (int  j = 2; (j < jblock); j=j+1) {
+    		
+				  int index1, index2, index3;
+					index1 = (((-1 + i) * (2 + BLOCK)) + j);			// [i-1] [j]
+					index2 = ((i * (2 + BLOCK)) + j);					// [i] [j]
+					index3 = (((1 + i) * (2 + BLOCK)) + j);			// [i+1] [j]
+	  
+		      Sxx[index2] = Ixx[index1-1 ] + 
+                                 Ixx[index1 ] + 
+                                 Ixx[index1+1 ] + 
+                                 Ixx[index2-1 ] + 
+                                 Ixx[index2 ] + 
+                                 Ixx[index2+1 ] + 
+                                 Ixx[index3-1 ] + 
+                                 Ixx[index3 ] + 
+                                 Ixx[index3+1 ];
+                                 
+     
+    		} 
+			}
+			
+  		for (int  i = 2; (i < iblock); i++) {  
+				for (int  j = 2; (j < jblock); j++) {
+				
+				  int index = (i * (2 + BLOCK)) + j;
+				  int index2 = ((ii+i) * (2 + C)) + (jj+j);
+				  float trace = 
+          	Sxx[index] + Syy[index];
 
-      Syy[((i * (2 + C)) + j)] = Iyy[(((-1 + i) * (2 + C)) + (-1 + j))] + 
-                                 Iyy[(((-1 + i) * (2 + C)) + j)] + 
-                                 Iyy[(((-1 + i) * (2 + C)) + (1 + j))] + 
-                                 Iyy[((i * (2 + C)) + (-1 + j))] + 
-                                 Iyy[((i * (2 + C)) + j)] + 
-                                 Iyy[((i * (2 + C)) + (1 + j))] + 
-                                 Iyy[(((1 + i) * (2 + C)) + (-1 + j))] + 
-                                 Iyy[(((1 + i) * (2 + C)) + j)] + 
-                                 Iyy[(((1 + i) * (2 + C)) + (1 + j))];
-    }
-  }
-  
-  #pragma omp parallel for
-  for (int  i = 2; (i < R); i = (i + 1)) {
-    for (int  j = 2; (j < C); j = (j + 1)) {
-		
-      Sxy[((i * (2 + C)) + j)] = Ixy[(((-1 + i) * (2 + C)) + (-1 + j))] + 
-                                 Ixy[(((-1 + i) * (2 + C)) + j)] +
-                                 Ixy[(((-1 + i) * (2 + C)) + (1 + j))] + 
-                                 Ixy[((i * (2 + C)) + (-1 + j))] + 
-                                 Ixy[((i * (2 + C)) + j)] + 
-                                 Ixy[((i * (2 + C)) + (1 + j))] + 
-                                 Ixy[(((1 + i) * (2 + C)) + (-1 + j))] + 
-                                 Ixy[(((1 + i) * (2 + C)) + j)] + 
-                                 Ixy[(((1 + i) * (2 + C)) + (1 + j))];
-    }
-  }
-  
-  #pragma omp parallel for
-  for (int  i = 2; (i < R); i = (i + 1)) {
-    for (int  j = 2; (j < C); j = (j + 1)) {
-      Sxx[((i * (2 + C)) + j)] = Ixx[(((-1 + i) * (2 + C)) + (-1 + j))] + 
-                                 Ixx[(((-1 + i) * (2 + C)) + j)] + 
-                                 Ixx[(((-1 + i) * (2 + C)) + (1 + j))] + 
-                                 Ixx[((i * (2 + C)) + (-1 + j))] + 
-                                 Ixx[((i * (2 + C)) + j)] + 
-                                 Ixx[((i * (2 + C)) + (1 + j))] + 
-                                 Ixx[(((1 + i) * (2 + C)) + (-1 + j))] + 
-                                 Ixx[(((1 + i) * (2 + C)) + j)] + 
-                                 Ixx[(((1 + i) * (2 + C)) + (1 + j))];
-    }
-  }
-  
-  #pragma omp parallel for
-  for (int  i = 2; (i < R); i = (i + 1)) {
-    for (int  j = 2; (j < C); j = (j + 1)) {
+		      float det = 
+	          Sxx[index] * Syy[index] - Sxy[index] * Sxy[index];
 
-      float trace = 
-          Sxx[((i * (2 + C)) + j)] + Syy[((i * (2 + C)) + j)];
-
-      float det = 
-          Sxx[((i * (2 + C)) + j)] * Syy[((i * (2 + C)) + j)] - 
-          Sxy[((i * (2 + C)) + j)] * Sxy[((i * (2 + C)) + j)];
-
-      harris[((i * (2 + C)) + j)] = det - (0.04f * trace * trace);
-    }
+      		harris[index2] = det - (0.04f * trace * trace);
+    		}
+		  }
+			
+    }  
+   	free(Ixx);
+	  free(Iyy);
+  	free(Ixy);
+	  free(Sxx);
+	  free(Sxy);
+	  free(Syy);
   }
-
-  free(Ixx);
-  free(Ixy);
-  free(Iyy);
-  free(Sxx);
-  free(Sxy);
-  free(Syy);
-  
-  free(dummy3); free(dummy4); free(dummy5);
-  free(dummy6); free(dummy7);
-}
+ }

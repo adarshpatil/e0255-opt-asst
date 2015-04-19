@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// check L1 / L2 size and tune
 #ifndef BLOCK
 #define BLOCK 128
 #endif
 
+//check 4k aliasing and tune
 #ifndef PAD
 #define PAD 1024
 #endif
@@ -16,8 +18,8 @@ void  harris_opt(int  C, int  R, float * img, float *& harris)
 	float *Ixx, *Ixy, *Iyy, *Sxx, *Sxy, *Syy;
 
   harris = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));	
-  dummy = (float *) (malloc(PAD));
-  
+  //dummy = (float *) (malloc(PAD));
+  #pragma omp parllel for
   for (int  ii = 0; ii < R; ii = (ii + BLOCK))
   {
 		Ixx = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
@@ -157,7 +159,7 @@ void  harris_opt(int  C, int  R, float * img, float *& harris)
 	  free(Sxx);
 	  free(Sxy);
 	  free(Syy);
-	  free(dummy); 
+	  //free(dummy); 
   	//free(dummy1); free(dummy2); free(dummy3); free(dummy4); free(dummy5);
   }
  }
