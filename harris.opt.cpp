@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <fstream>
 
 // check L1 / L2 size and tune
 #ifndef BLOCK
@@ -13,45 +14,42 @@
 
 void  harris_opt(int  C, int  R, float * img, float *& harris)
 {
-
-	float *dummy, *dummy1, *dummy2, *dummy3, *dummy4, *dummy5;
-	float *Ixx, *Ixy, *Iyy, *Sxx, *Sxy, *Syy;
-
+	#ifdef LOG
+	std::ofstream myfile;
+	myfile.open ("opt");
+	#endif
+	
+	unsigned int counter = 0;
+	int iblock, jblock;
+	
   harris = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));	
   //dummy = (float *) (malloc(PAD));
-  #pragma omp parllel for
-  for (int  ii = 0; ii < R; ii = (ii + BLOCK))
+  for (int  ii = -1; ii <= R; ii = (ii + BLOCK))
   {
-		Ixx = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
-	  //dummy1 = (float *) (malloc(PAD));
-	  Ixy = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
-	  //dummy2 = (float *) (malloc(PAD));
-	  Iyy = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
-	  //dummy3 = (float *) (malloc(PAD));
-	  Sxx = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
-  	//dummy4 = (float *) (malloc(PAD));
-  	Sxy = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
-	  //dummy5 = (float *) (malloc(PAD));
-	  Syy = (float *) (malloc((sizeof(float ) * ((2 + BLOCK) * (2 + BLOCK)))));
-    
-		for (int  jj = 0; jj < C; jj = (jj + BLOCK))
+  	float Ixx [BLOCK+4] [BLOCK+4];
+  	float Ixy [BLOCK+4] [BLOCK+4];
+  	float Iyy [BLOCK+4] [BLOCK+4];
+  	float Sxx [BLOCK+4] [BLOCK+4];
+  	float Sxy [BLOCK+4] [BLOCK+4];
+  	float Syy [BLOCK+4] [BLOCK+4];
+		
+		for (int  jj = -1; jj <= C; jj = (jj + BLOCK))
 		{
-			int iblock = std::min(R,ii+BLOCK) - ii;
-			int jblock = std::min(C,jj+BLOCK) - jj;
-	  	
-			for (int  i = 1; (i <= iblock); i = (i + 1))
+			iblock = std::min(R,ii+BLOCK+3);
+			jblock = std::min(C,jj+BLOCK+3);
+			for (int  i = std::max(1,ii); i <= iblock; i = (i + 1))
 			{
-				for (int  j = 1; (j <= jblock); j = (j + 1))
+				for (int  j = std::max(1,jj); j <= jblock; j = (j + 1))
 				{
 					float resx,resy;
-					int index1 = (((-1 + (ii+i)) * (C + 2)) + (-1 + (jj+j)));		// [i-1] [j-1]
-					int index2 = (((1 + (ii+i)) * (C + 2)) + (-1 + (jj+j))); 		// [i+1] [j-1]
-					int index3 = (((-1 + (ii+i)) * (C + 2)) + (jj+j));			// [i-1] [j]
-					int index4 = (((1 + (ii+i)) * (C + 2)) + (jj+j));				// [i+1] [j]
-					int index5 = (((-1 + (ii+i)) * (C + 2)) + (1 + (jj+j))); 		// [i-1] [j+1]
-					int index6 = (((1 + (ii+i)) * (C + 2)) + (1 + (jj+j)));		// [i+1] [j+1]
-					int index7 = (((ii+i) * (C + 2)) + (-1 + (jj+j)));			// [i] [j-1]
-					int index8 = (((ii+i) * (C + 2)) + (1 + (jj+j)));				// [i] [j+1]
+					int index1 = (((-1 + i) * (C + 2)) + (-1 + j));		// [i-1] [j-1]
+					int index2 = (((1 + i) * (C + 2)) + (-1 + j)); 		// [i+1] [j-1]
+					int index3 = (((-1 + i) * (C + 2)) + j);			// [i-1] [j]
+					int index4 = (((1 + i) * (C + 2)) + j);				// [i+1] [j]
+					int index5 = (((-1 + i) * (C + 2)) + (1 + j)); 		// [i-1] [j+1]
+					int index6 = (((1 + i) * (C + 2)) + (1 + j));		// [i+1] [j+1]
+					int index7 = ((i * (C + 2)) + (-1 + j));			// [i] [j-1]
+					int index8 = ((i * (C + 2)) + (1 + j));				// [i] [j+1]
 					
 					// X derivative
 					resx = (img[index1] * -0.0833333333333f) + 
@@ -69,97 +67,101 @@ void  harris_opt(int  C, int  R, float * img, float *& harris)
 										(img[index2] * -0.0833333333333f) + 
 										(img[index6] * 0.0833333333333f);
 										
-					Ixx[((i * (2 + BLOCK)) + j)] = resx * resx;
-					Iyy[((i * (2 + BLOCK)) + j)] = resy * resy;
-					Ixy[((i * (2 + BLOCK)) + j)] = resx * resy;
+					Ixx[i-ii][j-jj] = resx * resx;
+					Iyy[i-ii][j-jj] = resy * resy;
+					Ixy[i-ii][j-jj] = resx * resy;
  				}
 			}
 	  	
-			for (int  i = 2; (i < iblock); i=i+1) {
-				for (int  j = 2; (j < jblock); j=j+1) {
+	  	iblock = std::min(R-1,ii+BLOCK+2);
+	  	jblock = std::min(C-1,jj+BLOCK+2);
+	  	
+			for (int  i = std::max(2,ii+1); i <= iblock; i=i+1) {
+				for (int  j = std::max(2,jj+1); j <= jblock; j=j+1) {
 				
 					int index1, index2, index3;
-					index1 = (((-1 + i) * (2 + BLOCK)) + j);			// [i-1] [j]
-					index2 = ((i * (2 + BLOCK)) + j);					// [i] [j]
-					index3 = (((1 + i) * (2 + BLOCK)) + j);			// [i+1] [j]
+					index1 = (((-1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i-1] [j]
+					index2 = (((i-ii) * (BLOCK)) + (j-jj));					// [i] [j]
+					index3 = (((1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i+1] [j]
 	  
-					Syy[index2] = Iyy[ index1-1 ] + 
-                                 Iyy[ index1 ] + 
-                                 Iyy[ index1+1 ] + 
-                                 Iyy[ index2-1 ] + 
-                                 Iyy[ index2 ] + 
-                                 Iyy[ index2+1 ] + 
-                                 Iyy[ index3-1 ] + 
-                                 Iyy[ index3 ] + 
-                                 Iyy[ index3+1 ];
+					Syy[i-ii][j-jj] = Iyy[i-ii-1][j-jj-1] + 
+                                 Iyy[i-ii-1][j-jj] + 
+                                 Iyy[i-ii-1][j-jj+1] + 
+                                 Iyy[i-ii][j-jj-1] + 
+                                 Iyy[i-ii][j-jj] + 
+                                 Iyy[i-ii][j-jj+1] + 
+                                 Iyy[i-ii+1][j-jj-1] + 
+                                 Iyy[i-ii+1][j-jj] + 
+                                 Iyy[i-ii+1][j-jj+1];
 				} 
 			}
  
-			for (int  i = 2; (i < iblock); i=i+1) {
-				for (int  j = 2; (j < jblock); j=j+1){
+			for (int  i = std::max(2,ii+1); i <= iblock; i=i+1) {
+				for (int  j = std::max(2,jj+1); j <= jblock; j=j+1){
 				
 					int index1, index2, index3;
-					index1 = (((-1 + i) * (2 + BLOCK)) + j);			// [i-1] [j]
-					index2 = ((i * (2 + BLOCK)) + j);					// [i] [j]
-					index3 = (((1 + i) * (2 + BLOCK)) + j);			// [i+1] [j]
+					index1 = (((-1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i-1] [j]
+					index2 = (((i-ii) * (BLOCK)) + (j-jj));					// [i] [j]
+					index3 = (((1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i+1] [j]
 	  	
-      		Sxy[index2] = Ixy[ index1-1 ] + 
-                                 Ixy[ index1 ] +
-                                 Ixy[ index1+1 ] + 
-                                 Ixy[ index2-1 ] + 
-                                 Ixy[ index2] + 
-                                 Ixy[ index2+1 ] + 
-                                 Ixy[ index3-1 ] + 
-                                 Ixy[ index3 ] + 
-                                 Ixy[ index3+1 ];
+      		Sxy[i-ii][j-jj] = Ixy[i-ii-1][j-jj-1] + 
+                                 Ixy[i-ii-1][j-jj] + 
+                                 Ixy[i-ii-1][j-jj+1] + 
+                                 Ixy[i-ii][j-jj-1] + 
+                                 Ixy[i-ii][j-jj] + 
+                                 Ixy[i-ii][j-jj+1] + 
+                                 Ixy[i-ii+1][j-jj-1] + 
+                                 Ixy[i-ii+1][j-jj] + 
+                                 Ixy[i-ii+1][j-jj+1];
 				} 
 			}
 			
-			for (int  i = 2; (i < iblock); i=i+1) {
-    		for (int  j = 2; (j < jblock); j=j+1) {
+			for (int  i = std::max(2,ii+1); (i <= iblock); i=i+1) {
+    		for (int  j = std::max(2,jj+1); (j <= jblock); j=j+1) {
     		
 				  int index1, index2, index3;
-					index1 = (((-1 + i) * (2 + BLOCK)) + j);			// [i-1] [j]
-					index2 = ((i * (2 + BLOCK)) + j);					// [i] [j]
-					index3 = (((1 + i) * (2 + BLOCK)) + j);			// [i+1] [j]
+					index1 = (((-1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i-1] [j]
+					index2 = (((i-ii) * (BLOCK)) + (j-jj));					// [i] [j]
+					index3 = (((1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i+1] [j]
 	  
-		      Sxx[index2] = Ixx[index1-1 ] + 
-                                 Ixx[index1 ] + 
-                                 Ixx[index1+1 ] + 
-                                 Ixx[index2-1 ] + 
-                                 Ixx[index2 ] + 
-                                 Ixx[index2+1 ] + 
-                                 Ixx[index3-1 ] + 
-                                 Ixx[index3 ] + 
-                                 Ixx[index3+1 ];
+		      Sxx[i-ii][j-jj] = Ixx[i-ii-1][j-jj-1] + 
+                                 Ixx[i-ii-1][j-jj] + 
+                                 Ixx[i-ii-1][j-jj+1] + 
+                                 Ixx[i-ii][j-jj-1] + 
+                                 Ixx[i-ii][j-jj] + 
+                                 Ixx[i-ii][j-jj+1] + 
+                                 Ixx[i-ii+1][j-jj-1] + 
+                                 Ixx[i-ii+1][j-jj] + 
+                                 Ixx[i-ii+1][j-jj+1];
                                  
      
     		} 
 			}
 			
-  		for (int  i = 2; (i < iblock); i++) {  
-				for (int  j = 2; (j < jblock); j++) {
+			iblock = std::min(R-1,ii+BLOCK+1);
+			jblock = std::min(C-1,jj+BLOCK+1);
+			
+  		for (int  i = ii+2; (i <= iblock); i++) {  
+				for (int  j = jj+2; (j <= jblock); j++) {
 				
-				  int index = (i * (2 + BLOCK)) + j;
-				  int index2 = ((ii+i) * (2 + C)) + (jj+j);
+				  int index = (i * (2 + C)) + j;
+				  #ifdef LOG
+				  myfile << i << " " << j << "\n";
+				  #endif
 				  float trace = 
-          	Sxx[index] + Syy[index];
+          	Sxx[i-ii][j-jj] + Syy[i-ii][j-jj];
 
 		      float det = 
-	          Sxx[index] * Syy[index] - Sxy[index] * Sxy[index];
+	          Sxx[i-ii][j-jj] * Syy[i-ii][j-jj] - Sxy[i-ii][j-jj] * Sxy[i-ii][j-jj];
 
-      		harris[index2] = det - (0.04f * trace * trace);
+      		harris[index] = det - (0.04f * trace * trace);
+					counter++;
     		}
 		  }
-			
-    }  
-   	free(Ixx);
-	  free(Iyy);
-  	free(Ixy);
-	  free(Sxx);
-	  free(Sxy);
-	  free(Syy);
-	  //free(dummy); 
-  	//free(dummy1); free(dummy2); free(dummy3); free(dummy4); free(dummy5);
-  }
- }
+    }
+	}
+	//std::cout << "opt count: "<< counter << "\n";
+	#ifdef LOG
+	myfile.close();
+	#endif
+}

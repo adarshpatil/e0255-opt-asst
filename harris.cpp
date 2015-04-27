@@ -6,6 +6,7 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "harris.opt.cpp"
+#include <fstream>
 
 void harris_base(int C, int R, float * input, float *& harris);
 
@@ -51,7 +52,8 @@ int main(int argc, char** argv)
     const char* window_opencv_result  = "OpenCV Result";
     const char* window_ref_result  = "Reference Result";
     const char* window_opt_result = "Optimized Result";
-    const char* window_diff = "absdiff ref opt";
+    const char* window_diff_refopt = "absdiff ref opt";
+    const char* window_diff_optref = "absdiff opt ref";
 
     if(argc == 2){
         img = imread(argv[1]);
@@ -130,6 +132,7 @@ int main(int argc, char** argv)
         }
     }
     
+    std::cout << "C: " << M << " R: " << N << "\n";
     /* Optimized Implementation */
 	for (int i = 0; i < NRUNS; i++) {
         if (harris != NULL)
@@ -148,14 +151,15 @@ int main(int argc, char** argv)
       
 
 	#ifdef SHOW
-	Mat diffCVOpt(N-2, M-2, img_region.type());
-	Mat diffOptCV(N-2, M-2, img_region.type());
+	Mat diffRefOpt(N-2, M-2, img_region.type());
+	Mat diffOptRef(N-2, M-2, img_region.type());
     // Create windows
     //namedWindow( window_image, WINDOW_NORMAL );
     namedWindow( window_opencv_result, WINDOW_NORMAL );
     namedWindow( window_ref_result, WINDOW_NORMAL );
     namedWindow( window_opt_result, WINDOW_NORMAL );
-    namedWindow( window_diff, WINDOW_NORMAL );
+		namedWindow( window_diff_optref, WINDOW_NORMAL );
+		namedWindow( window_diff_refopt, WINDOW_NORMAL );
     for(;;) {
         int c;
         c = waitKey(10);
@@ -167,8 +171,11 @@ int main(int argc, char** argv)
         imshow( window_ref_result, result_ref * 10000);
         imshow( window_opt_result, result_opt * 10000);
         
-		absdiff(result_opt, result_ref, diffCVOpt);
-		imshow( window_diff, diffCVOpt * 10000);
+				absdiff(result_opt, result_ref, diffOptRef);
+				imshow( window_diff_optref, diffOptRef * 10000);
+				
+				absdiff(result_ref, result_opt, diffRefOpt);
+				imshow( window_diff_refopt, diffRefOpt * 10000);
 		
     }
 	#endif
@@ -181,6 +188,13 @@ int main(int argc, char** argv)
 /* Your Implementation */
 void  harris_base(int  C, int  R, float * img, float *& harris)
 {
+
+	#ifdef LOG
+	std::ofstream myfile;
+	myfile.open ("ref");
+	#endif
+	
+	//unsigned int counter = 0;
   float * Ix;
   Ix = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
   float * Iy;
@@ -279,9 +293,14 @@ void  harris_base(int  C, int  R, float * img, float *& harris)
           Sxy[((i * (2 + C)) + j)] * Sxy[((i * (2 + C)) + j)];
 
       harris[((i * (2 + C)) + j)] = det - (0.04f * trace * trace);
+			
+			#ifdef LOG
+      myfile << i << " " << j << "\n";
+      #endif
+      //counter++;
     }
   }
-  
+  //std::cout<<"ref count: " << counter << "\n";
   free(Ix);
   free(Iy);
   free(Ixx);
@@ -290,4 +309,7 @@ void  harris_base(int  C, int  R, float * img, float *& harris)
   free(Sxx);
   free(Sxy);
   free(Syy);
+  #ifdef LOG
+  myfile.close();
+  #endif
 }
