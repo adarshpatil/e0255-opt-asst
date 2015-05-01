@@ -99,3 +99,23 @@ o - toggles between base and optimized implementations
 * pragma omp parallel for
 * pragma GCC ivdep
 
+### Evaluation
+#### Image size
+* 21600px X 10800px
+* 29MB
+* Best reference time vs Worst optimized time measured
+
+#### Processor
+* Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz
+* intel_pstate driver; performance governer
+* Single socket, 4 physical cores, hyperthreading disabled
+* Caches 
+    * L1d cache:             32K
+    * L1i cache:             32K
+    * L2 cache:              256K
+    * L3 cache:              8192K
+
+#### Performance Speedup
+* Single Core + vectorize = **3.29x**
+* Multi Core + vectorize = **11.34**
+
