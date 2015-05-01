@@ -80,3 +80,22 @@ h - toggles harris mode on/off
 space - toggles between opencv and base or optimized implementation
 
 o - toggles between base and optimized implementations
+
+## Optimizations applied
+### Compiler flags
+* -O3 
+* -fprefetch-loop-arrays
+* -fopenmp
+* -ffast-math
+* -fprofile-generate
+* -fprofile-use
+
+### Code optimization
+* Tiling 
+* Tile sized intermediate Scratchpad arrays 
+* Unroll Jam i loop
+
+### Pragma Used
+* pragma omp parallel for
+* pragma GCC ivdep
+

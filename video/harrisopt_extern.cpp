@@ -12,8 +12,8 @@
 
 extern "C" void  harris_opt(int  C, int  R, float * img, void * harris_void)
 {
+	int iblock, jblock;
   float *harris = (float *)harris_void;
-  int iblock, jblock;
   
   #pragma omp parllel for
   for (int  ii = -1; ii <= R; ii = (ii + BLOCK))
@@ -31,6 +31,7 @@ extern "C" void  harris_opt(int  C, int  R, float * img, void * harris_void)
 			jblock = std::min(C,jj+BLOCK+3);
 			for (int  i = std::max(1,ii); i <= iblock; i = (i + 1))
 			{
+				#pragma GCC ivdep
 				for (int  j = std::max(1,jj); j <= jblock; j = (j + 1))
 				{
 					float resx,resy;
@@ -68,13 +69,9 @@ extern "C" void  harris_opt(int  C, int  R, float * img, void * harris_void)
 	  	iblock = std::min(R-1,ii+BLOCK+2);
 	  	jblock = std::min(C-1,jj+BLOCK+2);
 	  	
-			for (int  i = std::max(2,ii+1); i <= iblock; i=i+1) {
+			for (int  i = std::max(2,ii+1); i <= iblock; i=i+2) {
+				#pragma GCC ivdep
 				for (int  j = std::max(2,jj+1); j <= jblock; j=j+1) {
-				
-					int index1, index2, index3;
-					index1 = (((-1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i-1] [j]
-					index2 = (((i-ii) * (BLOCK)) + (j-jj));					// [i] [j]
-					index3 = (((1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i+1] [j]
 	  
 					Syy[i-ii][j-jj] = Iyy[i-ii-1][j-jj-1] + 
                                  Iyy[i-ii-1][j-jj] + 
@@ -85,17 +82,23 @@ extern "C" void  harris_opt(int  C, int  R, float * img, void * harris_void)
                                  Iyy[i-ii+1][j-jj-1] + 
                                  Iyy[i-ii+1][j-jj] + 
                                  Iyy[i-ii+1][j-jj+1];
+                                 
+					Syy[i-ii+1][j-jj] = Iyy[i-ii][j-jj-1] + 
+                                 Iyy[i-ii][j-jj] + 
+                                 Iyy[i-ii][j-jj+1] + 
+                                 Iyy[i-ii+1][j-jj-1] + 
+                                 Iyy[i-ii+1][j-jj] + 
+                                 Iyy[i-ii+1][j-jj+1] + 
+                                 Iyy[i-ii+2][j-jj-1] + 
+                                 Iyy[i-ii+2][j-jj] + 
+                                 Iyy[i-ii+2][j-jj+1];                                 
 				} 
 			}
  
-			for (int  i = std::max(2,ii+1); i <= iblock; i=i+1) {
+			for (int  i = std::max(2,ii+1); i <= iblock; i=i+2) {
+				#pragma GCC ivdep
 				for (int  j = std::max(2,jj+1); j <= jblock; j=j+1){
 				
-					int index1, index2, index3;
-					index1 = (((-1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i-1] [j]
-					index2 = (((i-ii) * (BLOCK)) + (j-jj));					// [i] [j]
-					index3 = (((1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i+1] [j]
-	  	
       		Sxy[i-ii][j-jj] = Ixy[i-ii-1][j-jj-1] + 
                                  Ixy[i-ii-1][j-jj] + 
                                  Ixy[i-ii-1][j-jj+1] + 
@@ -105,17 +108,23 @@ extern "C" void  harris_opt(int  C, int  R, float * img, void * harris_void)
                                  Ixy[i-ii+1][j-jj-1] + 
                                  Ixy[i-ii+1][j-jj] + 
                                  Ixy[i-ii+1][j-jj+1];
+                                 
+      		Sxy[i-ii+1][j-jj] = Ixy[i-ii][j-jj-1] + 
+                                 Ixy[i-ii][j-jj] + 
+                                 Ixy[i-ii][j-jj+1] + 
+                                 Ixy[i-ii+1][j-jj-1] + 
+                                 Ixy[i-ii+1][j-jj] + 
+                                 Ixy[i-ii+1][j-jj+1] + 
+                                 Ixy[i-ii+2][j-jj-1] + 
+                                 Ixy[i-ii+2][j-jj] + 
+                                 Ixy[i-ii+2][j-jj+1];                                 
 				} 
 			}
 			
-			for (int  i = std::max(2,ii+1); (i <= iblock); i=i+1) {
+			for (int  i = std::max(2,ii+1); (i <= iblock); i=i+2) {
+				#pragma GCC ivdep
     		for (int  j = std::max(2,jj+1); (j <= jblock); j=j+1) {
-    		
-				  int index1, index2, index3;
-					index1 = (((-1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i-1] [j]
-					index2 = (((i-ii) * (BLOCK)) + (j-jj));					// [i] [j]
-					index3 = (((1 + (i-ii)) * (BLOCK)) + (j-jj));			// [i+1] [j]
-	  
+    			
 		      Sxx[i-ii][j-jj] = Ixx[i-ii-1][j-jj-1] + 
                                  Ixx[i-ii-1][j-jj] + 
                                  Ixx[i-ii-1][j-jj+1] + 
@@ -126,6 +135,15 @@ extern "C" void  harris_opt(int  C, int  R, float * img, void * harris_void)
                                  Ixx[i-ii+1][j-jj] + 
                                  Ixx[i-ii+1][j-jj+1];
                                  
+		      Sxx[i-ii+1][j-jj] = Ixx[i-ii][j-jj-1] + 
+                                 Ixx[i-ii][j-jj] + 
+                                 Ixx[i-ii][j-jj+1] + 
+                                 Ixx[i-ii+1][j-jj-1] + 
+                                 Ixx[i-ii+1][j-jj] + 
+                                 Ixx[i-ii+1][j-jj+1] + 
+                                 Ixx[i-ii+2][j-jj-1] + 
+                                 Ixx[i-ii+2][j-jj] + 
+                                 Ixx[i-ii+2][j-jj+1];                                 
      
     		} 
 			}
@@ -133,13 +151,11 @@ extern "C" void  harris_opt(int  C, int  R, float * img, void * harris_void)
 			iblock = std::min(R-1,ii+BLOCK+1);
 			jblock = std::min(C-1,jj+BLOCK+1);
 			
-  		for (int  i = ii+2; (i <= iblock); i++) {  
+  		for (int  i = ii+2; (i <= iblock); i++) {
+  			#pragma GCC ivdep 
 				for (int  j = jj+2; (j <= jblock); j++) {
 				
 				  int index = (i * (2 + C)) + j;
-				  #ifdef LOG
-				  myfile << i << " " << j << "\n";
-				  #endif
 				  float trace = 
           	Sxx[i-ii][j-jj] + Syy[i-ii][j-jj];
 
@@ -147,9 +163,6 @@ extern "C" void  harris_opt(int  C, int  R, float * img, void * harris_void)
 	          Sxx[i-ii][j-jj] * Syy[i-ii][j-jj] - Sxy[i-ii][j-jj] * Sxy[i-ii][j-jj];
 
       		harris[index] = det - (0.04f * trace * trace);
-      		#ifdef LOG
-					counter++;
-					#endif
     		}
 		  }
     }

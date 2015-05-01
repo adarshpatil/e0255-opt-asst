@@ -132,7 +132,7 @@ int main(int argc, char** argv)
         }
     }
     
-    std::cout << "C: " << M << " R: " << N << "\n";
+    //std::cout << "C: " << M << " R: " << N << "\n";
     /* Optimized Implementation */
 	for (int i = 0; i < NRUNS; i++) {
         if (harris != NULL)
