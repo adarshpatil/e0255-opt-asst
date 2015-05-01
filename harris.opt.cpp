@@ -17,9 +17,9 @@ void  harris_opt(int  C, int  R, float * img, float *& harris)
 	#ifdef LOG
 	std::ofstream myfile;
 	myfile.open ("opt");
+	unsigned int counter = 0;
 	#endif
 	
-	unsigned int counter = 0;
 	int iblock, jblock;
 	
   harris = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));	
@@ -155,13 +155,16 @@ void  harris_opt(int  C, int  R, float * img, float *& harris)
 	          Sxx[i-ii][j-jj] * Syy[i-ii][j-jj] - Sxy[i-ii][j-jj] * Sxy[i-ii][j-jj];
 
       		harris[index] = det - (0.04f * trace * trace);
+      		#ifdef LOG
 					counter++;
+					#endif
     		}
 		  }
     }
 	}
-	//std::cout << "opt count: "<< counter << "\n";
+	
 	#ifdef LOG
+	std::cout << "opt count: "<< counter << "\n";
 	myfile.close();
 	#endif
 }

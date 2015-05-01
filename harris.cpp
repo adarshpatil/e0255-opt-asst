@@ -192,9 +192,9 @@ void  harris_base(int  C, int  R, float * img, float *& harris)
 	#ifdef LOG
 	std::ofstream myfile;
 	myfile.open ("ref");
+	unsigned int counter = 0;
 	#endif
 	
-	//unsigned int counter = 0;
   float * Ix;
   Ix = (float *) (malloc((sizeof(float ) * ((2 + R) * (2 + C)))));
   float * Iy;
@@ -296,11 +296,11 @@ void  harris_base(int  C, int  R, float * img, float *& harris)
 			
 			#ifdef LOG
       myfile << i << " " << j << "\n";
+      counter++;
       #endif
-      //counter++;
     }
   }
-  //std::cout<<"ref count: " << counter << "\n";
+  
   free(Ix);
   free(Iy);
   free(Ixx);
@@ -310,6 +310,7 @@ void  harris_base(int  C, int  R, float * img, float *& harris)
   free(Sxy);
   free(Syy);
   #ifdef LOG
+	std::cout<<"ref count: " << counter << "\n";
   myfile.close();
   #endif
 }
