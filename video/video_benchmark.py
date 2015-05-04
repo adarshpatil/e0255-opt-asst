@@ -92,7 +92,10 @@ while(cap.isOpened()):
             # Run first 50 frames in OpenCV mode and the rest 50 in reference mode
             cv_mode = False
         if frames > 100:
-            # Stop after 100 frames
+            # Run frame 100 to 150 in Optimized mode
+            harris_opt = True
+        if frames > 150:
+            # Stop after 150 frames
             break
         print "frame interval :  %.1f ms" % (frameEnd*1000 - frameStart*1000)
 
