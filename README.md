@@ -116,6 +116,8 @@ o - toggles between base and optimized implementations
     * L3 cache:              8192K
 
 #### Performance Speedup
+GCC 4.9.2
 * Single Core + vectorize = **3.29x**
-* Multi Core + vectorize = **11.34**
+* Multi Core + vectorize = **11.34x**
+Detailed performance speedup comparison of ICC vs GCC and vectorization, parallelism etc. available in report.pdf
 
